@@ -2,61 +2,51 @@
 
 Официальный сайт приложения **PhotoSorter** — автоматической сортировки фотографий и видео по дате создания.
 
-## 🌐 Публикация на GitHub Pages
+**🌍 Сайт:** [https://tommyaas.github.io/photo-sorter-website/](https://tommyaas.github.io/photo-sorter-website/)
 
-Сайт опубликован на **GitHub Pages** и доступен по адресу:
-`https://[ваш-username].github.io/photo-sorter-website/`
+**📁 Основной проект:** `../PhotoSorter/` (исходный код приложения)
 
-## 🚀 Развертывание
+---
 
-### 1. Создайте репозиторий на GitHub
+## 🚀 Публикация на GitHub Pages
 
-```bash
-# Войдите в GitHub CLI или используйте веб-интерфейс
-gh repo create photo-sorter-website --public
-```
+Репозиторий: [github.com/TommyAAS/photo-sorter-website](https://github.com/TommyAAS/photo-sorter-website)
 
-### 2. Загрузите файлы
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: PhotoSorter landing page"
-git branch -M main
-git remote add origin https://github.com/[ваш-username]/photo-sorter-website.git
-git push -u origin main
-```
-
-### 3. Включите GitHub Pages
-
-1. Откройте репозиторий на GitHub
-2. Перейдите в **Settings → Pages**
-3. В разделе **Branch** выберите `main` и папку `/ (root)`
-4. Нажмите **Save**
-
-Через 1-2 минуты сайт будет доступен по адресу:
-`https://[ваш-username].github.io/photo-sorter-website/`
+Сайт автоматически публикуется на **GitHub Pages** при пуше в ветку `master`.
 
 ## 🎨 Структура сайта
 
 - `index.html` — основной сайт (одностраничный лендинг)
 - `icon.png` — иконка приложения
+- `downloads/` — папка с файлами для скачивания
+- `README.md` — этот файл
 
-## 🔧 Настройка перед публикацией
+## 📦 Доступные версии для скачивания
 
-Перед публикацией замените в `index.html`:
+| Платформа | Версия | Файл |
+|-----------|--------|------|
+| 🪟 Windows | v1.1.1 | `downloads/PhotoSorter-Windows-v1.1.1.exe` |
+| 🪟 Windows | v1.1.0 | `downloads/PhotoSorter-Windows-v1.1.0.exe` |
+| 🪟 Windows | v1.0.3 | `downloads/PhotoSorter-Windows-v1.0.3.exe` |
+| 🪟 Windows | v1.0.2 | `downloads/PhotoSorter-Windows-v1.0.2.exe` |
+| 🍎 macOS | v1.0.2 | `downloads/PhotoSorter-Mac-v1.0.2.zip` |
 
-1. **Ссылки на скачивание** — укажите реальные ссылки на GitHub Releases
-2. **DonationAlerts** — `your_nickname` на ваш реальный ник
-3. **Boosty** — `your_nickname` на ваш реальный ник
-4. **GitHub Sponsors** — `your_nickname` на ваш реальный ник
-5. **Bitcoin адрес** — замените на ваш реальный BTC-адрес
-6. **GitHub ссылки** — `yourusername` на ваш GitHub username
+## 🔧 Как обновлять сайт
+
+При изменении файлов в этой папке:
+
+```bash
+git add .
+git commit -m "описание изменений"
+git push origin master
+```
+
+Через 1-2 минуты обновления появятся на сайте.
 
 ## 💜 Поддержка
 
 Если вам нравится проект,支持下те его развитие:
-- DonationAlerts
-- Boosty
-- GitHub Sponsors
+- [DonationAlerts](https://www.donationalerts.com/r/TommyAAS)
+- [Boosty](https://boosty.to/TommyAAS)
+- [GitHub Sponsors](https://github.com/sponsors/TommyAAS)
 - Криптовалюта (BTC, USDT)
