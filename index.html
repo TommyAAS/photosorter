@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 PhotoSorter — Сортировка фото и видео по дате</title>
+    <meta name="description" content="PhotoSorter — бесплатное приложение для автоматической сортировки фотографий и видео по дате создания.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a26;
+            --bg-card-hover: #222233;
+            --border: #2a2a3e;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --accent: #6c5ce7;
+            --accent-hover: #7d6ff0;
+            --accent-glow: rgba(108, 92, 231, 0.3);
+            --success: #00d68f;
+            --warning: #ffaa00;
+            --danger: #ff6b6b;
+            --gradient: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(108, 92, 231, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(108, 92, 231, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(108, 92, 231, 0.08) 0%, transparent 60%),
+                        radial-gradient(circle at 70% 60%, rgba(162, 155, 254, 0.05) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+            animation: glowShift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowShift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-5%, -5%) rotate(5deg); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 24px;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(42, 42, 62, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(10, 10, 15, 0.95);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-logo span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-donate-btn {
+            background: var(--gradient);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600 !important;
+        }
+
+        .nav-donate-btn::after {
+            display: none !important;
+        }
+
+        .nav-donate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 24px 80px;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-text {
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(108, 92, 231, 0.15);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 .highlight {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin-bottom: 36px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        .btn-download {
+            background: rgba(0, 214, 143, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(0, 214, 143, 0.3);
+        }
+
+        .btn-download:hover {
+            background: rgba(0, 214, 143, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 214, 143, 0.2);
+        }
+
+        /* Hero Mockup */
+        .hero-mockup {
+            position: relative;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .mockup-window {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mockup-dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .mockup-dot:nth-child(1) { background: #ff5f57; }
+        .mockup-dot:nth-child(2) { background: #ffbd2e; }
+        .mockup-dot:nth-child(3) { background: #28c840; }
+
+        .mockup-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-left: 12px;
+        }
+
+        .mockup-body {
+            padding: 24px;
+        }
+
+        .mockup-app {
+            background: #1e1e2e;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .mockup-app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .mockup-app-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mockup-app-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mockup-app-controls span {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+        }
+
+        .mockup-field {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mockup-field-icon {
+            font-size: 1rem;
+        }
+
+        .mockup-field-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .mockup-field-value {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .mockup-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .mockup-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .mockup-option .check {
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--text-muted);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+
+        .mockup-option.active .check {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .mockup-btn-big {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .mockup-progress {
+            margin-top: 16px;
+        }
+
+        .mockup-progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .mockup-progress-fill {
+            height: 100%;
+            width: 65%;
+            background: var(--gradient);
+            border-radius: 3px;
+            animation: progressAnim 3s ease-in-out infinite;
+        }
+
+        @keyframes progressAnim {
+            0%, 100% { width: 65%; }
+            50% { width: 80%; }
+        }
+
+        .mockup-log-line {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+            padding: 3px 0;
+        }
+
+        .mockup-log-line .highlight-text {
+            color: var(--success);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            position: relative;
+            z-index: 1;
+            padding: 40px 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 16px;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Features Section */
+        .features {
+            position: relative;
+            z-index: 1;
+            padding: 100px 24px;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(108, 92, 231, 0.1);
+            border: 1px solid rgba(108, 92, 231, 0.2);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 60px;
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(108, 92, 231, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Download Section */
+        .download {
+            position: relative;
+            z-index: 1;
+            padding: 100px 24px;
+            background: var(--bg-secondary);
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .download-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .download-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-os-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .download-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .download-card .version {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .download-card .desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .download-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(0, 214, 143, 0.1);
+            border: 1px solid rgba(0, 214, 143, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--success);
+            margin-bottom: 16px;
+        }
+
+        .download-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .download-note {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .download-note a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .download-note a:hover {
+            text-decoration: underline;
+        }
+
+        /* How it works */
+        .how-it-works {
+            position: relative;
+            z-index: 1;
+            padding: 100px 24px;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            right: 60px;
+            height: 2px;
+            background: linear-gradient(to right, var(--accent), var(--border), var(--border), var(--accent));
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .step h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Donation Section */
+        .donate {
+            position: relative;
+            z-index: 1;
+            padding: 100px 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+
+        .donate-content {
+            text-align: center;
+        }
+
+        .donate-content .section-subtitle {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .donate-methods {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 900px;
+            margin: 48px auto 0;
+        }
+
+        .donate-method {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px 24px;
+            transition: all 0.3s ease;
+        }
+
+        .donate-method:hover {
+            transform: translateY(-4px);
+            border-color: rgba(108, 92, 231, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .donate-method-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .donate-method h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .donate-method p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .donate-method .btn {
+            padding: 10px 24px;
+            font-size: 0.9rem;
+        }
+
+        .donate-crypto {
+            max-width: 600px;
+            margin: 32px auto 0;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .donate-crypto h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .crypto-address {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .crypto-address .copy-btn {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .crypto-address .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-secondary);
+        }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(20px);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero h1 { font-size: 3rem; }
+            .section-title { font-size: 2.2rem; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .steps { grid-template-columns: repeat(2, 1fr); }
+            .steps::before { display: none; }
+            .donate-methods { grid-template-columns: 1fr; max-width: 400px; }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 12px 16px; }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+
+            .nav-links.open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(10, 10, 15, 0.98);
+                backdrop-filter: blur(20px);
+                padding: 20px 24px;
+                border-bottom: 1px solid var(--border);
+                gap: 16px;
+            }
+
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .hero h1 { font-size: 2.4rem; }
+            .hero p { margin-left: auto; margin-right: auto; }
+            .hero-buttons { justify-content: center; }
+
+            .hero-mockup { display: none; }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .stat-number { font-size: 1.8rem; }
+
+            .features-grid { grid-template-columns: 1fr; }
+            .download-grid { grid-template-columns: 1fr; }
+            .steps { grid-template-columns: 1fr; gap: 32px; }
+
+            .footer-container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .section-title { font-size: 1.8rem; }
+            .hero-buttons { flex-direction: column; }
+            .download-card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                📸 <span>PhotoSorter</span>
+            </a>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Меню">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#features">Возможности</a></li>
+                <li><a href="#how-it-works">Как работает</a></li>
+                <li><a href="#download">Скачать</a></li>
+                <li><a href="#donate" class="nav-donate-btn">💜 Поддержать</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <div class="hero-badge">
+                    <span class="dot"></span>
+                    v1.1.1 — Последняя версия
+                </div>
+                <h1>
+                    Упорядочьте ваши<br>
+                    <span class="highlight">фото и видео</span><br>
+                    по дате создания
+                </h1>
+                <p>
+                    Бесплатное приложение для автоматической сортировки фотографий и видео.
+                    Раскладывает файлы по папкам <strong>Год / Месяц</strong> с умным определением даты из EXIF.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary">
+                        ⬇️ Скачать бесплатно
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        Узнать больше →
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-mockup">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <div class="mockup-dots">
+                            <span class="mockup-dot"></span>
+                            <span class="mockup-dot"></span>
+                            <span class="mockup-dot"></span>
+                        </div>
+                        <span class="mockup-title">PhotoSorter v1.1.1</span>
+                    </div>
+                    <div class="mockup-body">
+                        <div class="mockup-app">
+                            <div class="mockup-app-header">
+                                <span class="mockup-app-title">📸 PhotoSorter</span>
+                                <div class="mockup-app-controls">
+                                    <span></span><span></span><span></span>
+                                </div>
+                            </div>
+
+                            <div class="mockup-field">
+                                <span class="mockup-field-icon">📁</span>
+                                <span class="mockup-field-text">Исходная папка</span>
+                                <span class="mockup-field-value">C:\Фото\Несорт...</span>
+                            </div>
+                            <div class="mockup-field">
+                                <span class="mockup-field-icon">📁</span>
+                                <span class="mockup-field-text">Целевая папка</span>
+                                <span class="mockup-field-value">D:\Фото\Сорт...</span>
+                            </div>
+
+                            <div class="mockup-options">
+                                <div class="mockup-option active">
+                                    <span class="check">✓</span> Пробный прогон
+                                </div>
+                                <div class="mockup-option active">
+                                    <span class="check">✓</span> EXIF для даты
+                                </div>
+                                <div class="mockup-option active">
+                                    <span class="check">✓</span> Рекурсивно
+                                </div>
+                                <div class="mockup-option">
+                                    <span class="check"></span> ffprobe
+                                </div>
+                            </div>
+
+                            <div class="mockup-btn-big">🚀 ЗАПУСТИТЬ СОРТИРОВКУ</div>
+
+                            <div class="mockup-progress">
+                                <div class="mockup-progress-bar">
+                                    <div class="mockup-progress-fill"></div>
+                                </div>
+                                <div class="mockup-log-line">📄 IMG_2451.jpg → <span class="highlight-text">2013/Май_2013/Фото/</span></div>
+                                <div class="mockup-log-line">📄 DSC_002.png → <span class="highlight-text">2013/Май_2013/Фото/</span></div>
+                                <div class="mockup-log-line">🎬 MOV_001.mp4 → <span class="highlight-text">2013/Май_2013/Видео/</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Безопасность</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4+</div>
+                <div class="stat-label">Года разработки</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Платформы</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Фото ёмкость</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-label">★ Возможности</div>
+            <h2 class="section-title">Всё, что нужно для<br>порядка в фотоархиве</h2>
+            <p class="section-subtitle">
+                PhotoSorter автоматически определяет дату из EXIF-данных и раскладывает файлы 
+                по структуре Год/Месяц — больше никакого хаоса в папках.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Автоматическая сортировка</h3>
+                    <p>Раскладывает фото и видео по папкам <strong>Год/Месяц_год/Фото/</strong> и <strong>Год/Месяц_год/Видео/</strong> одной кнопкой.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Умное определение даты</h3>
+                    <p>Читает все EXIF-теги и выбирает самую раннюю валидную дату. Решает проблему "редактор переписал дату".</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Full HD интерфейс</h3>
+                    <p>Современный дизайн на CustomTkinter с тёмной темой, понятный и интуитивный интерфейс.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Полная безопасность</h3>
+                    <p>Приложение НИКОГДА не удаляет файлы. Только перемещение или копирование. Работайте без страха.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👁️</div>
+                    <h3>Dry-run режим</h3>
+                    <p>Пробный прогон — посмотрите, что будет сделано, без реальных операций с файлами.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎬</div>
+                    <h3>Поддержка видео</h3>
+                    <p>Работает с MP4, MOV, AVI и другими форматами. Определяет дату через mtime и опционально ffprobe.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3>Детальный лог</h3>
+                    <p>Все операции записываются в лог. Вы всегда можете посмотреть, что и куда было перемещено.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>Рекурсивный обход</h3>
+                    <p>Обрабатывает вложенные папки — положите всю корневую папку с фото, приложение сделает всё само.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏹️</div>
+                    <h3>Отмена операции</h3>
+                    <p>Сортировку можно прервать в любой момент. Все уже обработанные файлы останутся на месте.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="section-container">
+            <div class="section-label">⚡ Как это работает</div>
+            <h2 class="section-title">Всего 4 шага</h2>
+            <p class="section-subtitle">Начать сортировку проще простого. Просто выберите папки и нажмите кнопку.</p>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Выберите исходную папку</h4>
+                    <p>Укажите папку, где лежат неотсортированные фото и видео</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>Выберите целевую папку</h4>
+                    <p>Укажите папку, куда будут скопированы/перемещены отсортированные файлы</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>Настройте опции</h4>
+                    <p>Включите EXIF, пробный прогон, копирование и другие опции по желанию</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Нажмите "Запустить"</h4>
+                    <p>Наблюдайте за прогрессом — приложение сделает всю работу за вас</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download" id="download">
+        <div class="section-container">
+            <div class="section-label">⬇️ Скачать</div>
+            <h2 class="section-title">Выберите вашу платформу</h2>
+            <p class="section-subtitle">
+                Скачайте готовую сборку для вашей операционной системы. 
+                Python не требуется — всё уже включено.
+            </p>
+
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-os-icon">🪟</div>
+                    <div class="download-badge">✅ Последняя версия</div>
+                    <h3>Windows</h3>
+                    <p class="version">Версия 1.1.1</p>
+                    <p class="desc">Готовый EXE-файл. Просто скачайте и запустите.</p>
+                    <a href="https://github.com/yourusername/photosorter/releases/download/v1.1.1/PhotoSorter-v1.1.1.exe" class="btn btn-download" onclick="alert('После публикации на GitHub Releases ссылка будет активна. Временно — скачивание локального файла.'); return false;">
+                        ⬇️ Скачать для Windows
+                    </a>
+                </div>
+                <div class="download-card">
+                    <div class="download-os-icon">🍎</div>
+                    <div class="download-badge">✅ Последняя версия</div>
+                    <h3>macOS</h3>
+                    <p class="version">Версия 1.0.2</p>
+                    <p class="desc">Готовое приложение для Mac. Распакуйте ZIP и запустите.</p>
+                    <a href="https://github.com/yourusername/photosorter/releases/download/v1.0.2/PhotoSorter-Mac-v1.0.2.zip" class="btn btn-download" onclick="alert('После публикации на GitHub Releases ссылка будет активна. Временно — скачивание локального файла.'); return false;">
+                        ⬇️ Скачать для macOS
+                    </a>
+                </div>
+            </div>
+
+            <p class="download-note">
+                📖 Также доступен <a href="#">исходный код на GitHub</a> · 
+                Для разработчиков: <code>pip install -r requirements.txt && python main.py</code>
+            </p>
+        </div>
+    </section>
+
+    <!-- Donation Section -->
+    <section class="donate" id="donate">
+        <div class="section-container">
+            <div class="donate-content">
+                <div class="section-label">💜 Поддержать проект</div>
+                <h2 class="section-title">Сделайте свой вклад</h2>
+                <p class="section-subtitle">
+                    PhotoSorter — это бесплатное приложение с открытым исходным кодом. 
+                    Если оно вам помогло, вы можете поддержать его разработку донатом.
+                </p>
+
+                <div class="donate-methods">
+                    <div class="donate-method">
+                        <div class="donate-method-icon">💳</div>
+                        <h4>DonationAlerts</h4>
+                        <p>Поддержка через популярную платформу для донатов</p>
+                        <a href="https://www.donationalerts.com/r/your_nickname" target="_blank" class="btn btn-primary" onclick="alert('Укажите здесь ссылку на ваш DonationAlerts'); return false;">
+                            Поддержать →
+                        </a>
+                    </div>
+                    <div class="donate-method">
+                        <div class="donate-method-icon">🚀</div>
+                        <h4>Boosty</h4>
+                        <p>Ежемесячная подписка или разовый донат</p>
+                        <a href="https://boosty.to/your_nickname" target="_blank" class="btn btn-primary" onclick="alert('Укажите здесь ссылку на ваш Boosty'); return false;">
+                            Поддержать →
+                        </a>
+                    </div>
+                    <div class="donate-method">
+                        <div class="donate-method-icon">⭐</div>
+                        <h4>GitHub Sponsor</h4>
+                        <p>Поддержка через GitHub Sponsors</p>
+                        <a href="https://github.com/sponsors/your_nickname" target="_blank" class="btn btn-primary" onclick="alert('Укажите здесь ссылку на ваш GitHub Sponsors'); return false;">
+                            Поддержать →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="donate-crypto">
+                    <h4>₿ Криптовалюта</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+                        Bitcoin (BTC) — принимаем любые суммы
+                    </p>
+                    <div class="crypto-address">
+                        <span>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                        <button class="copy-btn" onclick="copyCrypto(this)">📋 Копировать</button>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 12px;">
+                        Или USDT (TRC-20): <code style="color: var(--accent);">TXYZ... (напишите мне)</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-copy">
+                © 2024-2026 PhotoSorter
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/yourusername/photosorter" target="_blank">GitHub</a>
+                <a href="#">Политика конфиденциальности</a>
+                <a href="#">Связаться</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">Скопировано!</div>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu
+        function toggleMobileMenu() {
+            const links = document.getElementById('navLinks');
+            links.classList.toggle('open');
+        }
+
+        // Close mobile menu on link click
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('open');
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Copy crypto address
+        function copyCrypto(btn) {
+            const address = btn.parentElement.querySelector('span').textContent;
+            navigator.clipboard.writeText(address).then(() => {
+                const toast = document.getElementById('toast');
+                toast.textContent = '✅ Адрес скопирован!';
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            });
+        }
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step, .donate-method, .download-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
