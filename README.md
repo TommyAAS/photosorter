@@ -2,7 +2,7 @@
 
 Официальный сайт приложения **PhotoSorter** — автоматической сортировки фотографий и видео по дате создания.
 
-**🌍 Сайт:** [https://tommyaas.github.io/photo-sorter-website/](https://tommyaas.github.io/photo-sorter-website/)
+**🌍 Сайт:** [https://tommyaas.github.io/photosorter/](https://tommyaas.github.io/photosorter/)
 
 **📁 Основной проект:** `../PhotoSorter/` (исходный код приложения)
 
@@ -10,7 +10,7 @@
 
 ## 🚀 Публикация на GitHub Pages
 
-Репозиторий: [github.com/TommyAAS/photo-sorter-website](https://github.com/TommyAAS/photo-sorter-website)
+Репозиторий: [github.com/TommyAAS/photosorter](https://github.com/TommyAAS/photosorter)
 
 Сайт автоматически публикуется на **GitHub Pages** при пуше в ветку `master`.
 
