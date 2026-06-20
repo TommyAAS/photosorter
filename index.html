@@ -712,6 +712,54 @@
             text-decoration: underline;
         }
 
+        /* Older versions list */
+        .old-versions {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .old-versions summary {
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 12px;
+            display: inline-block;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .old-versions summary:hover {
+            color: var(--text-secondary);
+            border-color: var(--text-muted);
+        }
+
+        .old-versions-list {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .old-versions-list a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 6px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: inline-block;
+            min-width: 300px;
+        }
+
+        .old-versions-list a:hover {
+            color: var(--text-secondary);
+            border-color: var(--text-muted);
+            background: var(--bg-card);
+        }
+
         /* How it works */
         .how-it-works {
             position: relative;
@@ -1259,7 +1307,7 @@
                     <h3>Windows</h3>
                     <p class="version">Версия 1.1.1</p>
                     <p class="desc">Готовый EXE-файл. Просто скачайте и запустите.</p>
-                    <a href="https://github.com/TommyAAS/PhotoSorter/releases/download/v1.1.1/PhotoSorter-v1.1.1.exe" class="btn btn-download">
+                    <a href="downloads/PhotoSorter-Windows-v1.1.1.exe" class="btn btn-download">
                         ⬇️ Скачать для Windows
                     </a>
                 </div>
@@ -1269,11 +1317,20 @@
                     <h3>macOS</h3>
                     <p class="version">Версия 1.0.2</p>
                     <p class="desc">Готовое приложение для Mac. Распакуйте ZIP и запустите.</p>
-                    <a href="https://github.com/TommyAAS/PhotoSorter/releases/download/v1.0.2/PhotoSorter-Mac-v1.0.2.zip" class="btn btn-download">
+                    <a href="downloads/PhotoSorter-Mac-v1.0.2.zip" class="btn btn-download">
                         ⬇️ Скачать для macOS
                     </a>
                 </div>
             </div>
+
+            <details class="old-versions">
+                <summary>📜 Предыдущие версии</summary>
+                <div class="old-versions-list">
+                    <a href="downloads/PhotoSorter-Windows-v1.1.0.exe">⬇️ Windows v1.1.0</a>
+                    <a href="downloads/PhotoSorter-Windows-v1.0.3.exe">⬇️ Windows v1.0.3</a>
+                    <a href="downloads/PhotoSorter-Windows-v1.0.2.exe">⬇️ Windows v1.0.2</a>
+                </div>
+            </details>
 
             <p class="download-note">
                 📖 Также доступен <a href="https://github.com/TommyAAS/PhotoSorter">исходный код на GitHub</a> · 
